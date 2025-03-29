@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: backend_service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - database
+    env_file:
+      - ./backend/.env
+    networks:
+      - devops-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend_service
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./frontend/.env
+    networks:
+      - devops-network
+    restart: unless-stopped
+
+  database:
+    image: postgres:latest
+    container_name: postgres_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    env_file:
+      - ./backend/.env
+    networks:
+      - devops-network
+    restart: unless-stopped
+
+networks:
+  devops-network:
+    driver: bridge
