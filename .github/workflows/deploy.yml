@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main 
+      - main  # Change if using a different branch for deployment
 
 jobs:
   deploy:
@@ -21,13 +21,13 @@ jobs:
 
       - name: Build and Push Backend Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/ictg_task-backend:latest ./backend
-          docker push ${{ secrets.DOCKER_USERNAME }}/ictg_task-backend:latest
+          sudo docker build -t ${{ secrets.DOCKER_USERNAME }}/ictg_task-backend:latest ./backend
+          sudo docker push ${{ secrets.DOCKER_USERNAME }}/ictg_task-backend:latest
 
       - name: Build and Push Frontend Image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/ictg_task-frontend:latest ./frontend
-          docker push ${{ secrets.DOCKER_USERNAME }}/ictg_task-frontend:latest
+          sudo docker build -t ${{ secrets.DOCKER_USERNAME }}/ictg_task-frontend:latest ./frontend
+          sudo docker push ${{ secrets.DOCKER_USERNAME }}/ictg_task-frontend:latest
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
@@ -37,18 +37,18 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
             # Stop and remove existing containers
-            docker stop backend frontend postgres_database || true
-            docker rm backend frontend postgres_database || true
+            sudo docker stop backend frontend postgres_database || true
+            sudo docker rm backend frontend postgres_database || true
 
             # Pull latest images
-            docker pull destinyobs/ictg_task-backend:latest
-            docker pull destinyobs/ictg_task-frontend:latest
+            sudo docker pull destinyobs/ictg_task-backend:latest
+            sudo docker pull destinyobs/ictg_task-frontend:latest
 
             # Ensure network exists
-            docker network inspect devops-network >/dev/null 2>&1 || docker network create devops-network
+            sudo docker network inspect devops-network >/dev/null 2>&1 || docker network create devops-network
 
             # Restart Database
-            docker run -d \
+            sudo docker run -d \
               --name postgres_database \
               --network devops-network \
               -e POSTGRES_USER=app \
@@ -64,7 +64,7 @@ jobs:
             done
 
             # Run Backend
-            docker run -d \
+            sudo docker run -d \
               --name backend \
               --network devops-network \
               -e DATABASE_URL="postgresql://app:${{ secrets.POSTGRES_PASSWORD }}@postgres_database:5432/ictg_db" \
@@ -72,11 +72,11 @@ jobs:
               destinyobs/ictg_task-backend:latest
 
             # Run Frontend
-            docker run -d \
+            sudo docker run -d \
               --name frontend \
               --network devops-network \
               -p 5173:5173 \
               destinyobs/ictg_task-frontend:latest
 
             # Cleanup
-            docker system prune -af
+            sudo docker system prune -af
