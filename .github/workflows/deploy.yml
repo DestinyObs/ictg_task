@@ -37,8 +37,8 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
             # Stop and remove existing containers
-            docker stop backend frontend postgres_database || true
-            docker rm backend frontend postgres_database || true
+            docker stop backend_service frontend_service postgres_database || true
+            docker rm backend_service frontend_service postgres_database || true
 
             # Pull latest images
             docker pull destinyobs/ictg_task-backend:latest
@@ -72,7 +72,7 @@ jobs:
 
             # Run Backend
             docker run -d \
-              --name backend \
+              --name backend_service \
               --network devops-network \
               -e DATABASE_URL="postgresql://app:${{ secrets.POSTGRES_PASSWORD }}@postgres_database:5432/ictg_db" \
               -p 8000:8000 \
@@ -81,7 +81,7 @@ jobs:
 
             # Run Frontend
             docker run -d \
-              --name frontend \
+              --name frontend_service \
               --network devops-network \
               -p 5173:5173 \
               --restart unless-stopped \
