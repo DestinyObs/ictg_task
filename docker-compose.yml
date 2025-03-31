@@ -15,6 +15,7 @@ services:
       - devops-network
     restart: unless-stopped
 
+
   frontend:
     build:
       context: ./frontend
